@@ -54,7 +54,7 @@ fig.update_traces(textposition='inside', hovertemplate='<b>%{text}</b><br>Year: 
 
 # Marquer l'absence des USA en 1968 avec une annotation plus esthétique
 fig.add_annotation(
-    x=1968,
+    x=1980,
     y=6,  # Placer l'annotation plus haut
     text="USA did not participate due to political issues",
     showarrow=True,
