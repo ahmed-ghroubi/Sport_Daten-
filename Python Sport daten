@@ -1,1 +1,96 @@
+import pandas as pd
+import plotly.express as px
+
+# Utiliser le DataFrame fourni
+df = final_data
+
+# Ajouter les abréviations pour les équipes
+abbreviations = {
+    'United States': 'USA',
+    'Soviet Union': 'SU',
+    'China': 'CHN',
+    'Egypt': 'EGY',
+    'Italy': 'ITA',
+    'Lithuania': 'LTU',
+    'Germany': 'GER',
+    'Brazil': 'BRA',
+    'Argentina': 'ARG',
+    'Spain': 'ESP'
+}
+df['Team_Abbr'] = df['Team'].map(abbreviations).fillna(df['Team'])
+
+# Filtrer le dataset pour les équipes ayant gagné des médailles
+medal_winners = df[df['Medal'].notna()]
+
+# Séparer les datasets pour chaque type de médaille
+gold_medals = medal_winners[medal_winners['Medal'] == 'Gold']
+silver_medals = medal_winners[medal_winners['Medal'] == 'Silver']
+bronze_medals = medal_winners[medal_winners['Medal'] == 'Bronze']
+
+# Grouper par Année et Équipe, et agréger le nombre de joueurs NBA pour chaque type de médaille
+gold_medals_grouped = gold_medals.groupby(['Year', 'Team_Abbr']).agg({'NBA': 'sum'}).reset_index()
+silver_medals_grouped = silver_medals.groupby(['Year', 'Team_Abbr']).agg({'NBA': 'sum'}).reset_index()
+bronze_medals_grouped = bronze_medals.groupby(['Year', 'Team_Abbr']).agg({'NBA': 'sum'}).reset_index()
+
+# Ajouter une colonne pour le type de médaille
+gold_medals_grouped['Medal'] = 'Gold'
+silver_medals_grouped['Medal'] = 'Silver'
+bronze_medals_grouped['Medal'] = 'Bronze'
+
+# Combiner les trois dataframes
+combined_medals = pd.concat([gold_medals_grouped, silver_medals_grouped, bronze_medals_grouped])
+
+# Filtrer pour n'inclure que les années spécifiques des Jeux Olympiques
+years = list(range(1948, 2025, 4))
+combined_medals = combined_medals[combined_medals['Year'].isin(years)]
+
+# Créer le graphique
+fig = px.bar(combined_medals, x='Year', y='NBA', color='Medal', text='Team_Abbr',
+             color_discrete_map={'Gold': '#FFD700', 'Silver': '#C0C0C0', 'Bronze': '#CD7F32'},
+             title='Number of NBA Players on Medal-Winning Teams Over the Years')
+
+# Personnaliser les info-bulles pour afficher les noms des équipes
+fig.update_traces(textposition='inside', hovertemplate='<b>%{text}</b><br>Year: %{x}<br>NBA Players: %{y}<extra></extra>')
+
+# Marquer l'absence des USA en 1968 avec une annotation plus esthétique
+fig.add_annotation(
+    x=1968,
+    y=6,  # Placer l'annotation plus haut
+    text="USA did not participate due to political issues",
+    showarrow=True,
+    arrowhead=1,
+    ax=0,
+    ay=-40,
+    bgcolor="rgba(255, 255, 255, 0.8)",
+    bordercolor="black"
+)
+
+# Mettre à jour la mise en page pour une meilleure lisibilité
+fig.update_layout(
+    xaxis=dict(
+        tickmode='array',
+        tickvals=years,
+        ticktext=[str(year) for year in years],
+        showgrid=True,
+        gridcolor='lightgray'
+    ),
+    xaxis_title='Year',
+    yaxis=dict(
+        showgrid=True,
+        gridcolor='lightgray'
+    ),
+    yaxis_title='Number of NBA Players',
+    legend_title='Medal',
+    barmode='stack',
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)',
+    font=dict(
+        family="Arial",
+        size=12,
+        color="Black"
+    )
+)
+
+fig.show()
+
 
