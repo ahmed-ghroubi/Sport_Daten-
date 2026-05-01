@@ -1,36 +1,36 @@
-# Filtrer le dataset pour les équipes ayant gagné des médailles
+# Filter the dataset for teams that have won medals
 medal_winners = df[df['Medal'].notna()]
 
-# Séparer les datasets pour chaque type de médaille
+# Split the datasets for each type of medal
 gold_medals = medal_winners[medal_winners['Medal'] == 'Gold']
 silver_medals = medal_winners[medal_winners['Medal'] == 'Silver']
 bronze_medals = medal_winners[medal_winners['Medal'] == 'Bronze']
 
-# Grouper par Année et Équipe, et agréger le nombre de joueurs NBA pour chaque type de médaille
+# Group by Year and Team, and aggregate the number of NBA players for each medal type
 gold_medals_grouped = gold_medals.groupby(['Year', 'Team']).agg({'NBA': 'sum'}).reset_index()
 silver_medals_grouped = silver_medals.groupby(['Year', 'Team']).agg({'NBA': 'sum'}).reset_index()
 bronze_medals_grouped = bronze_medals.groupby(['Year', 'Team']).agg({'NBA': 'sum'}).reset_index()
 
-# Ajouter une colonne pour le type de médaille
+# Add a column for the medal type
 gold_medals_grouped['Medal'] = 'Gold'
 silver_medals_grouped['Medal'] = 'Silver'
 bronze_medals_grouped['Medal'] = 'Bronze'
 
-# Combiner les trois dataframes
+# Combine the three dataframes
 combined_medals = pd.concat([gold_medals_grouped, silver_medals_grouped, bronze_medals_grouped])
 
-# Créer le graphique
+# Create the chart
 fig = px.bar(combined_medals, x='Year', y='NBA', color='Medal', 
              color_discrete_map={'Gold': '#FFD700', 'Silver': '#C0C0C0', 'Bronze': '#CD7F32'},
              title='Number of NBA Players on Medal-Winning Teams Over the Years')
 
-# Personnaliser les info-bulles pour afficher les noms des équipes uniquement en survol
+# Customize tooltips to display team names only on hover
 fig.update_traces(hovertemplate='<b>Team: %{text}</b><br>Year: %{x}<br>NBA Players: %{y}<extra></extra>')
 
-# Ajouter les noms des équipes pour les info-bulles
+# Add team names for hover tooltips
 fig.for_each_trace(lambda trace: trace.update(text=combined_medals['Team']))
 
-# Mettre à jour la mise en page pour une meilleure lisibilité
+# Update layout for better readability
 fig.update_layout(
     xaxis_title='Year',
     yaxis_title='Number of NBA Players',
@@ -41,13 +41,15 @@ fig.update_layout(
 fig.show()
 
 ######################
+
+# Create a column indicating whether a medal was won
 df['Medal_Won'] = df['Medal'].notna()
 
-# Calculate average number of NBA players for teams that won medals
+# Calculate the average number of NBA players for teams that won medals
 medal_winners_avg = df[df['Medal_Won']].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
 medal_winners_avg['Category'] = 'Medal Winners'
 
-# Calculate average number of NBA players for teams that did not win medals
+# Calculate the average number of NBA players for teams that did not win medals
 non_medal_winners_avg = df[~df['Medal_Won']].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
 non_medal_winners_avg['Category'] = 'Non-Medal Winners'
 
@@ -57,10 +59,11 @@ combined_avg = pd.concat([medal_winners_avg, non_medal_winners_avg])
 combined_avg.head()
 
 ##########################
+
 # Add a 'Medal_Won' column
 df['Medal_Won'] = df['Medal'].notna()
 
-# Calculate average number of NBA players for each type of medal
+# Calculate average number of NBA players for each medal type
 gold_avg = df[df['Medal'] == 'Gold'].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
 gold_avg['Category'] = 'Gold Medal'
 
@@ -79,9 +82,7 @@ combined_avg = pd.concat([gold_avg, silver_avg, bronze_avg, no_medal_avg])
 
 combined_avg.head()
 
-import plotly.express as px
-
-# Create the plot
+# Create the chart
 fig = px.bar(combined_avg, x='Category', y='Average_NBA_Players', color='Category',
              title='Average Number of NBA Players in Teams by Medal Type',
              text='Team', barmode='group')
