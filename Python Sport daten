@@ -1,10 +1,10 @@
 import pandas as pd
 import plotly.express as px
 
-# Utiliser le DataFrame fourni
+# Use the provided DataFrame
 df = final_data
 
-# Ajouter les abréviations pour les équipes
+# Add abbreviations for teams
 abbreviations = {
     'United States': 'USA',
     'Soviet Union': 'SU',
@@ -19,43 +19,43 @@ abbreviations = {
 }
 df['Team_Abbr'] = df['Team'].map(abbreviations).fillna(df['Team'])
 
-# Filtrer le dataset pour les équipes ayant gagné des médailles
+# Filter the dataset for teams that have won medals
 medal_winners = df[df['Medal'].notna()]
 
-# Séparer les datasets pour chaque type de médaille
+# Split the datasets for each type of medal
 gold_medals = medal_winners[medal_winners['Medal'] == 'Gold']
 silver_medals = medal_winners[medal_winners['Medal'] == 'Silver']
 bronze_medals = medal_winners[medal_winners['Medal'] == 'Bronze']
 
-# Grouper par Année et Équipe, et agréger le nombre de joueurs NBA pour chaque type de médaille
+# Group by Year and Team, and aggregate the number of NBA players for each medal type
 gold_medals_grouped = gold_medals.groupby(['Year', 'Team_Abbr']).agg({'NBA': 'sum'}).reset_index()
 silver_medals_grouped = silver_medals.groupby(['Year', 'Team_Abbr']).agg({'NBA': 'sum'}).reset_index()
 bronze_medals_grouped = bronze_medals.groupby(['Year', 'Team_Abbr']).agg({'NBA': 'sum'}).reset_index()
 
-# Ajouter une colonne pour le type de médaille
+# Add a column for the medal type
 gold_medals_grouped['Medal'] = 'Gold'
 silver_medals_grouped['Medal'] = 'Silver'
 bronze_medals_grouped['Medal'] = 'Bronze'
 
-# Combiner les trois dataframes
+# Combine the three dataframes
 combined_medals = pd.concat([gold_medals_grouped, silver_medals_grouped, bronze_medals_grouped])
 
-# Filtrer pour n'inclure que les années spécifiques des Jeux Olympiques
+# Filter to include only specific Olympic years
 years = list(range(1948, 2025, 4))
 combined_medals = combined_medals[combined_medals['Year'].isin(years)]
 
-# Créer le graphique
+# Create the chart
 fig = px.bar(combined_medals, x='Year', y='NBA', color='Medal', text='Team_Abbr',
              color_discrete_map={'Gold': '#FFD700', 'Silver': '#C0C0C0', 'Bronze': '#CD7F32'},
              title='Number of NBA Players on Medal-Winning Teams Over the Years')
 
-# Personnaliser les info-bulles pour afficher les noms des équipes
+# Customize hover information to display team names
 fig.update_traces(textposition='inside', hovertemplate='<b>%{text}</b><br>Year: %{x}<br>NBA Players: %{y}<extra></extra>')
 
-# Marquer l'absence des USA en 1968 avec une annotation plus esthétique
+# Mark the absence of the USA in 1980 with a clearer annotation
 fig.add_annotation(
     x=1980,
-    y=6,  # Placer l'annotation plus haut
+    y=6,
     text="USA did not participate due to political issues",
     showarrow=True,
     arrowhead=1,
@@ -65,231 +65,4 @@ fig.add_annotation(
     bordercolor="black"
 )
 
-# Mettre à jour la mise en page pour une meilleure lisibilité
-fig.update_layout(
-    xaxis=dict(
-        tickmode='array',
-        tickvals=years,
-        ticktext=[str(year) for year in years],
-        showgrid=True,
-        gridcolor='lightgray'
-    ),
-    xaxis_title='Year',
-    yaxis=dict(
-        showgrid=True,
-        gridcolor='lightgray'
-    ),
-    yaxis_title='Number of NBA Players',
-    legend_title='Medal',
-    barmode='stack',
-    plot_bgcolor='rgba(0,0,0,0)',
-    paper_bgcolor='rgba(0,0,0,0)',
-    font=dict(
-        family="Arial",
-        size=12,
-        color="Black"
-    )
-)
-
-fig.show()
-
-#########################plot2
-
-df=final_data
-df = df[df['Year'] >= 1948]
-
-# Calculer le nombre total de joueurs NBA pour chaque équipe chaque année
-nba_players_per_team_year = df.groupby(['Year', 'Team']).agg(Total_NBA_Players=('NBA', 'sum')).reset_index()
-
-# Associer chaque équipe avec le type de médaille gagnée ou aucune médaille
-medals_per_team_year = df.dropna(subset=['Medal']).groupby(['Year', 'Team']).agg(Medal=('Medal', 'first')).reset_index()
-no_medals_per_team_year = df[df['Medal'].isna()].groupby(['Year', 'Team']).agg(Medal=('Medal', lambda x: 'None')).reset_index()
-
-combined_data = pd.concat([medals_per_team_year, no_medals_per_team_year])
-
-# Combiner les données du nombre de joueurs NBA avec les types de médailles
-final_data1 = pd.merge(nba_players_per_team_year, combined_data, on=['Year', 'Team'])
-
-final_data1
-# Comparer le nombre moyen de joueurs NBA pour chaque type de médaille
-mean_nba_per_medal = final_data1.groupby('Medal')['Total_NBA_Players'].mean().reset_index()
-mean_nba_per_medal
-
-import plotly.express as px
-
-# Visualiser la distribution du nombre de joueurs NBA pour chaque type de médaille
-fig = px.box(final_data1, x='Medal', y='Total_NBA_Players', 
-             title='Distribution of NBA Players by Medal Type',
-             labels={'Total_NBA_Players': 'Total Number of NBA Players', 'Medal': 'Medal Type'})
-
-fig.show()
-
-#########################plot3
-import statsmodels.api as sm
-import numpy as np
-import plotly.express as px
-
-# Utiliser le DataFrame fourni
-df = final_data
-
-# Filtrer les années pour n'inclure que celles à partir de 1948
-df = df[df['Year'] >= 1948]
-
-# Ajouter les abréviations pour les équipes
-abbreviations = {
-    'United States': 'USA',
-    'Soviet Union': 'SU',
-    'China': 'CHN',
-    'Egypt': 'EGY',
-    'Italy': 'ITA',
-    'Lithuania': 'LTU',
-    'Germany': 'GER',
-    'Brazil': 'BRA',
-    'Argentina': 'ARG',
-    'Spain': 'ESP'
-}
-df['Team_Abbr'] = df['Team'].map(abbreviations).fillna(df['Team'])
-
-# Calculer le nombre total de joueurs NBA pour chaque équipe chaque année
-nba_players_per_team_year = df.groupby(['Year', 'Team_Abbr']).agg(Total_NBA_Players=('NBA', 'sum')).reset_index()
-
-# Associer chaque équipe avec le type de médaille gagnée ou aucune médaille
-medals_per_team_year = df.dropna(subset=['Medal']).groupby(['Year', 'Team_Abbr']).agg(Medal=('Medal', 'first')).reset_index()
-no_medals_per_team_year = df[df['Medal'].isna()].groupby(['Year', 'Team_Abbr']).agg(Medal=('Medal', lambda x: 'None')).reset_index()
-
-# Combiner les données des médailles
-combined_data = pd.concat([medals_per_team_year, no_medals_per_team_year])
-
-# Combiner les données du nombre de joueurs NBA avec les types de médailles
-final_data1 = pd.merge(nba_players_per_team_year, combined_data, on=['Year', 'Team_Abbr'])
-
-# Filtrer pour n'inclure que les années spécifiques des Jeux Olympiques
-years = list(range(1948, 2025, 4))
-final_data1 = final_data1[final_data1['Year'].isin(years)]
-
-# Ajouter une constante pour l'interception du modèle
-final_data1['const'] = 1
-
-# Fonction pour ajuster un modèle de régression de Poisson
-def poisson_regression(data, medal_type):
-    df_medal = data[data['Medal'] == medal_type]
-    model = sm.GLM(df_medal['Total_NBA_Players'], df_medal[['const', 'Year']], family=sm.families.Poisson())
-    result = model.fit()
-    return result
-
-# Ajuster les modèles pour chaque type de médaille
-results_gold = poisson_regression(final_data1, 'Gold')
-results_silver = poisson_regression(final_data1, 'Silver')
-results_bronze = poisson_regression(final_data1, 'Bronze')
-results_none = poisson_regression(final_data1, 'None')
-
-# Afficher les résumés des modèles
-print("Gold Medal Model:\n", results_gold.summary())
-print("\nSilver Medal Model:\n", results_silver.summary())
-print("\nBronze Medal Model:\n", results_bronze.summary())
-print("\nNo Medal Model:\n", results_none.summary())
-
-# Visualiser les prédictions
-final_data1['Predicted_Gold'] = results_gold.predict(final_data1[['const', 'Year']])
-final_data1['Predicted_Silver'] = results_silver.predict(final_data1[['const', 'Year']])
-final_data1['Predicted_Bronze'] = results_bronze.predict(final_data1[['const', 'Year']])
-final_data1['Predicted_None'] = results_none.predict(final_data1[['const', 'Year']])
-
-# Calculer la différence entre les deux extrémités pour chaque type de médaille
-gold_diff = final_data1[final_data1['Medal'] == 'Gold'].iloc[-1]['Predicted_Gold'] - final_data1[final_data1['Medal'] == 'Gold'].iloc[0]['Predicted_Gold']
-silver_diff = final_data1[final_data1['Medal'] == 'Silver'].iloc[-1]['Predicted_Silver'] - final_data1[final_data1['Medal'] == 'Silver'].iloc[0]['Predicted_Silver']
-bronze_diff = final_data1[final_data1['Medal'] == 'Bronze'].iloc[-1]['Predicted_Bronze'] - final_data1[final_data1['Medal'] == 'Bronze'].iloc[0]['Predicted_Bronze']
-none_diff = final_data1[final_data1['Medal'] == 'None'].iloc[-1]['Predicted_None'] - final_data1[final_data1['Medal'] == 'None'].iloc[0]['Predicted_None']
-
-# Créer le graphique des prédictions
-fig = px.scatter(final_data1, x='Year', y='Total_NBA_Players', color='Medal',
-                 color_discrete_map={'Gold': '#FFD700', 'Silver': '#C0C0C0', 'Bronze': '#CD7F32', 'None': '#808080'},
-                 title='Number of NBA Players on Teams by Medal Type Over the Years')
-
-# Ajouter les lignes de régression
-fig.add_traces(px.line(final_data1, x='Year', y='Predicted_Gold').update_traces(line=dict(color='#FFD700')).data)
-fig.add_traces(px.line(final_data1, x='Year', y='Predicted_Silver').update_traces(line=dict(color='#C0C0C0')).data)
-fig.add_traces(px.line(final_data1, x='Year', y='Predicted_Bronze').update_traces(line=dict(color='#CD7F32')).data)
-fig.add_traces(px.line(final_data1, x='Year', y='Predicted_None').update_traces(line=dict(color='gray')).data)
-
-# Ajouter les segments de ligne pour visualiser les différences
-fig.add_shape(type='line', x0=final_data1[final_data1['Medal'] == 'Gold'].iloc[0]['Year'],
-              y0=final_data1[final_data1['Medal'] == 'Gold'].iloc[0]['Predicted_Gold'],
-              x1=final_data1[final_data1['Medal'] == 'Gold'].iloc[-1]['Year'],
-              y1=final_data1[final_data1['Medal'] == 'Gold'].iloc[-1]['Predicted_Gold'],
-              line=dict(color='#FFD700', width=2, dash='dash'))
-
-
-# Mettre à jour la mise en page pour une meilleure lisibilité
-fig.update_layout(
-    xaxis_title='Year',
-    yaxis_title='Number of NBA Players',
-    legend_title='Medal',
-    plot_bgcolor='rgba(0,0,0,0)',
-    paper_bgcolor='rgba(0,0,0,0)',
-    font=dict(
-        family="Arial",
-        size=12,
-        color="Black"
-    ),
-    xaxis=dict(
-        showgrid=True,
-        gridcolor='lightgray'
-    ),
-    yaxis=dict(
-        showgrid=True,
-        gridcolor='lightgray'
-    )
-)
-
-# Ajouter des annotations pour les différences
-fig.add_annotation(
-    x=final_data1[final_data1['Medal'] == 'Gold'].iloc[-1]['Year'],
-    y=final_data1[final_data1['Medal'] == 'Gold'].iloc[-1]['Predicted_Gold'],
-    text=f'Gold Diff: {gold_diff:.2f}',
-    showarrow=True,
-    arrowhead=1,
-    ax=0,
-    ay=-40,
-    bgcolor="rgba(255, 255, 255, 0.8)",
-    bordercolor="black"
-)
-
-fig.add_annotation(
-    x=final_data1[final_data1['Medal'] == 'Silver'].iloc[-1]['Year'],
-    y=final_data1[final_data1['Medal'] == 'Silver'].iloc[-1]['Predicted_Silver'],
-    text=f'Silver Diff: {silver_diff:.2f}',
-    showarrow=True,
-    arrowhead=1,
-    ax=0,
-    ay=-40,
-    bgcolor="rgba(255, 255, 255, 0.8)",
-    bordercolor="black"
-)
-
-fig.add_annotation(
-    x=final_data1[final_data1['Medal'] == 'Bronze'].iloc[-1]['Year'],
-    y=final_data1[final_data1['Medal'] == 'Bronze'].iloc[-1]['Predicted_Bronze'],
-    text=f'Bronze Diff: {bronze_diff:.2f}',
-    showarrow=True,
-    arrowhead=1,
-    ax=0,
-    ay=-40,
-    bgcolor="rgba(255, 255, 255, 0.8)",
-    bordercolor="black"
-)
-
-fig.add_annotation(
-    x=final_data1[final_data1['Medal'] == 'None'].iloc[-1]['Year'],
-    y=final_data1[final_data1['Medal'] == 'None'].iloc[-1]['Predicted_None'],
-    text=f'None Diff: {none_diff:.2f}',
-    showarrow=True,
-    arrowhead=1,
-    ax=0,
-    ay=-40,
-    bgcolor="rgba(255, 255, 255, 0.8)",
-    bordercolor="black"
-)
-
-fig.show()
-
+# Update layout for better readability
