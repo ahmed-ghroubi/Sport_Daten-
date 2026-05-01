@@ -1,100 +1,84 @@
-# Filter the dataset for teams that have won medals
-medal_winners = df[df['Medal'].notna()]
+# Olympic Basketball & NBA Players Analysis
 
-# Split the datasets for each type of medal
-gold_medals = medal_winners[medal_winners['Medal'] == 'Gold']
-silver_medals = medal_winners[medal_winners['Medal'] == 'Silver']
-bronze_medals = medal_winners[medal_winners['Medal'] == 'Bronze']
+## Overview
+This project analyzes the relationship between the number of NBA players in national basketball teams and their performance in the Olympic Games (measured by medals: Gold, Silver, Bronze, or no medal).
 
-# Group by Year and Team, and aggregate the number of NBA players for each medal type
-gold_medals_grouped = gold_medals.groupby(['Year', 'Team']).agg({'NBA': 'sum'}).reset_index()
-silver_medals_grouped = silver_medals.groupby(['Year', 'Team']).agg({'NBA': 'sum'}).reset_index()
-bronze_medals_grouped = bronze_medals.groupby(['Year', 'Team']).agg({'NBA': 'sum'}).reset_index()
+The goal is to explore whether having more NBA players increases the likelihood of winning medals and how this relationship evolves over time.
 
-# Add a column for the medal type
-gold_medals_grouped['Medal'] = 'Gold'
-silver_medals_grouped['Medal'] = 'Silver'
-bronze_medals_grouped['Medal'] = 'Bronze'
+---
 
-# Combine the three dataframes
-combined_medals = pd.concat([gold_medals_grouped, silver_medals_grouped, bronze_medals_grouped])
+## Dataset
+The dataset (`final_data`) contains historical Olympic basketball data, including:
 
-# Create the chart
-fig = px.bar(combined_medals, x='Year', y='NBA', color='Medal', 
-             color_discrete_map={'Gold': '#FFD700', 'Silver': '#C0C0C0', 'Bronze': '#CD7F32'},
-             title='Number of NBA Players on Medal-Winning Teams Over the Years')
+- `Year` – Olympic year  
+- `Team` – National team  
+- `Medal` – Medal won (Gold, Silver, Bronze, or NaN)  
+- `NBA` – Number of NBA players in the team  
 
-# Customize tooltips to display team names only on hover
-fig.update_traces(hovertemplate='<b>Team: %{text}</b><br>Year: %{x}<br>NBA Players: %{y}<extra></extra>')
+---
 
-# Add team names for hover tooltips
-fig.for_each_trace(lambda trace: trace.update(text=combined_medals['Team']))
+## Methodology
 
-# Update layout for better readability
-fig.update_layout(
-    xaxis_title='Year',
-    yaxis_title='Number of NBA Players',
-    legend_title='Medal',
-    barmode='stack'
-)
+### Data Preparation
+- Filtered Olympic years (from 1948 onward, every 4 years)  
+- Created team abbreviations for better visualization  
+- Separated teams by medal type  
+- Aggregated number of NBA players per team and year  
 
-fig.show()
+---
 
-######################
+## Analysis & Visualizations
 
-# Create a column indicating whether a medal was won
-df['Medal_Won'] = df['Medal'].notna()
+### Plot 1 – NBA Players in Medal-Winning Teams Over Time
+- Stacked bar chart  
+- Shows the number of NBA players in teams winning Gold, Silver, and Bronze medals  
+- Includes annotations (e.g., USA absence in 1980)  
 
-# Calculate the average number of NBA players for teams that won medals
-medal_winners_avg = df[df['Medal_Won']].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
-medal_winners_avg['Category'] = 'Medal Winners'
+Insert Plot 1 here
 
-# Calculate the average number of NBA players for teams that did not win medals
-non_medal_winners_avg = df[~df['Medal_Won']].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
-non_medal_winners_avg['Category'] = 'Non-Medal Winners'
+---
 
-# Combine both dataframes
-combined_avg = pd.concat([medal_winners_avg, non_medal_winners_avg])
+### Plot 2 – Distribution of NBA Players by Medal Type
+- Boxplot comparing:
+  - Gold medal teams  
+  - Silver medal teams  
+  - Bronze medal teams  
+  - Non-medal teams  
+- Helps identify differences in team composition  
 
-combined_avg.head()
+Insert Plot 2 here
 
-##########################
+---
 
-# Add a 'Medal_Won' column
-df['Medal_Won'] = df['Medal'].notna()
+### Plot 3 – Poisson Regression Analysis
+- Applied Poisson regression to model:
+  - Number of NBA players over time  
+  - Separate models for each medal category  
+- Visualized:
+  - Predicted trends  
+  - Differences between first and last Olympic years  
 
-# Calculate average number of NBA players for each medal type
-gold_avg = df[df['Medal'] == 'Gold'].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
-gold_avg['Category'] = 'Gold Medal'
+Insert Plot 3 here
 
-silver_avg = df[df['Medal'] == 'Silver'].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
-silver_avg['Category'] = 'Silver Medal'
+---
 
-bronze_avg = df[df['Medal'] == 'Bronze'].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
-bronze_avg['Category'] = 'Bronze Medal'
+## Key Findings
+- Teams winning Gold medals tend to have more NBA players on average  
+- The presence of NBA players has increased over time, especially in top-performing teams  
+- The gap between medal-winning teams and non-medal teams is visible but not absolute  
+- Regression results suggest a positive trend over time, particularly for high-performing teams  
 
-# Calculate average number of NBA players for teams that did not win medals
-no_medal_avg = df[~df['Medal_Won']].groupby('Team')['NBA'].mean().reset_index(name='Average_NBA_Players')
-no_medal_avg['Category'] = 'No Medal'
+---
 
-# Combine all dataframes
-combined_avg = pd.concat([gold_avg, silver_avg, bronze_avg, no_medal_avg])
+## Technologies Used
+- Python  
+- Pandas  
+- Plotly  
+- Statsmodels  
 
-combined_avg.head()
+---
 
-# Create the chart
-fig = px.bar(combined_avg, x='Category', y='Average_NBA_Players', color='Category',
-             title='Average Number of NBA Players in Teams by Medal Type',
-             text='Team', barmode='group')
+## How to Run the Project
 
-# Customize hover data to show team names
-fig.update_traces(textposition='outside', hovertemplate='<b>%{text}</b><br>Category: %{x}<br>Average NBA Players: %{y}<extra></extra>')
-
-# Update layout for better readability
-fig.update_layout(
-    xaxis_title='Category',
-    yaxis_title='Average Number of NBA Players',
-    showlegend=False
-)
-
-fig.show()
+```bash
+pip install pandas plotly statsmodels
